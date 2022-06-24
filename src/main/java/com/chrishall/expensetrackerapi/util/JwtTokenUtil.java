@@ -43,9 +43,25 @@ public class JwtTokenUtil {
 	
 	private <T> T getClaimFromToken(String token, Function<Claims, T> claimsResolver) {
 		
-		final Claims claims = Jwts.parser().setSigningKey(secret).parseClaimsJwt(token).getBody();
+		final Claims claims = Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();
 		return claimsResolver.apply(claims);
 		
+	}
+
+	public boolean validateToken(String jwtToken, UserDetails userDetails) {
+		final String username = getUsernameFromToken(jwtToken);
+		
+		return username.equals(userDetails.getUsername()) && !isTokenExpired(jwtToken);
+	 
+	}
+
+	private boolean isTokenExpired(String jwtToken) {
+		final Date expiration = getExpirationDateFromToken(jwtToken);
+		return expiration.before(new Date ());
+	}
+
+	private Date getExpirationDateFromToken(String jwtToken) {
+		return getClaimFromToken(jwtToken,  Claims :: getExpiration);
 	}
 	
 	
